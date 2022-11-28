@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: polardb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+      # annotations:
+      #   "cni.projectcalico.org/ipAddrs": "[\"192.168.161.214\"]"
+    spec:
+      nodeName: worker206
+      containers:
+      - name: zookeeper
+        image: zookeeper:3.8.0
+        imagePullPolicy: IfNotPresent
+        command: ["tail"] 
+        args: ["-f","/etc/os-release"] 
+        ports:
+        - containerPort: 2181
+          name: polardb
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport-zk
+  labels:
+    app: nodeport-zk
+spec:
+  selector:
+    app: zookeeper
+  ports:
+  - port: 2181
+    nodePort: 32181
+    name: nodeport-zk
+  type: NodePort

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sysbench
+  namespace: polardb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sysbench
+  template:
+    metadata:
+      labels:
+        app: sysbench
+    spec:
+      nodeName: worker206
+      containers:
+      - name: sysbench
+        image: ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+        command: ["/bin/sleep", "365d"]
+        volumeMounts:
+        - mountPath: /opt/
+          name: sysbench-volume
+      volumes:
+      - name: sysbench-volume
+        hostPath:
+          path: /opt/sysbench_shell
+          type: Directory

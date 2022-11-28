@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: polardb-replica-0
+  namespace: polardb
+spec:
+  replicas: 1
+  serviceName: ""
+  selector:
+    matchLabels:
+      app: polardb-replica-0
+  template:
+    metadata:
+      labels:
+        app: polardb-replica-0
+    spec:
+      schedulerName: my-scheduler
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: polardb
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: polardb-replica-0
+      containers:
+      - name: polardb-replica-0
+        image: polardb/polardb_pg_devel:centos7
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/bash", "-c", "cd /home/postgres/PolarDB-for-PostgreSQL;/home/postgres/PolarDB-for-PostgreSQL/replica_init.sh"] 
+        command: [ "/bin/sh", "-c", "--" ]
+        args: [ "tail -f /etc/os-release" ]
+        securityContext:
+          privileged: true  
+          capabilities:
+            add: ["SYS_PTRACE"]
+        env:
+        - name: COLUMNSc
+          value: "tput cols"
+        - name: LINES
+          value: "tput lines"
+        ports:
+        - containerPort: 5433
+          name: polardb
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "2000m"
+            memory: "6000Mi"
+          requests:
+            cpu: "2000m"
+            memory: "4000Mi"
+        volumeMounts:
+        - mountPath: /home/postgres
+          name: polardb-volume
+      volumes:
+      - name: polardb-volume
+        persistentVolumeClaim:
+          claimName: polardb-pvc-0
+        

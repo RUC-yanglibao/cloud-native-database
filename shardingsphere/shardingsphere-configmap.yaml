@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-shardingsphere
+data:
+  server.yaml: |
+    mode:
+      overwrite: false
+      type: Cluster
+      repository:
+        type: ZooKeeper
+        props:
+          namespace: governance_ds
+          server-lists: 192.168.161.221:2181
+          retryIntervalMilliseconds: 500
+          timeToLiveSeconds: 60
+          maxRetries: 3
+          operationTimeoutMilliseconds: 500
+    rules:
+      - !AUTHORITY
+        users:
+          - root@%:root
+          - sharding@:sharding
+        provider:
+          type: ALL_PERMITTED
+      - !TRANSACTION
+        defaultType: XA
+        providerType: Atomikos
+      - !SQL_PARSER
+        sqlCommentParseEnabled: false
+        sqlStatementCache:
+          initialCapacity: 5000
+          maximumSize: 655350
+        parseTreeCache:
+          initialCapacity: 1024
+          maximumSize: 10240
+    props:
+      proxy-frontend-database-protocol-type: PostgreSQL
+      max-connections-size-per-query: 100
+      kernel-executor-size: 64
+      proxy-frontend-flush-threshold: 256
+      proxy-hint-enabled: false
+      sql-show: false
+      check-table-metadata-enabled: false
+      proxy-backend-query-fetch-size: -1
+      proxy-frontend-executor-size: 0
+      proxy-backend-executor-suitable: OLAP
+      proxy-frontend-max-connections: 0
+      sql-federation-type: NONE
+      proxy-backend-driver-type: JDBC
+      proxy-netty-backlog: 1024

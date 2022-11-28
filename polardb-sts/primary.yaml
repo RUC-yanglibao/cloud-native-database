@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polardb-primary-0
+  namespace: polardb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polardb-primary-0
+  template:
+    metadata:
+      labels:
+        app: polardb-primary-0
+      # annotations:
+      #   "cni.projectcalico.org/ipAddrs": "[\"192.168.149.110\"]"
+    spec:
+      nodeName: worker218
+      containers:
+      - name: polardb-primary-0
+        image: polardb/polardb_pg_devel:centos7
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/bash", "-c", "source /etc/bashrc;cd /home/postgres/PolarDB-for-PostgreSQL;/home/postgres/PolarDB-for-PostgreSQL/polardb-primary.sh;/home/postgres/PolarDB-for-PostgreSQL/ip_primary.sh"] 
+        command: [ "/bin/sh", "-c", "--" ]
+        args: [ "tail -f /etc/os-release" ]
+        securityContext:
+          privileged: true  
+          capabilities:
+            add: ["SYS_PTRACE"]
+        env:
+        - name: COLUMNSc
+          value: "tput cols"
+        - name: LINES
+          value: "tput lines"
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /home/postgres
+          name: polardb-volume
+      volumes:
+      - name: polardb-volume
+        persistentVolumeClaim:
+          claimName: polardb-pvc-0
+          
+
